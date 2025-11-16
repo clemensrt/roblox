@@ -9,12 +9,12 @@ local Functions = _G.Functions
 local firstExecution = true
 
 -------------------------------------------------
-Tabs.Custom:Section({
+Tabs.VehicleMods:Section({
     Title = "Upgraded Roads",
     TextSize = 16,
 })
 
-Tabs.Custom:Toggle({
+Tabs.VehicleMods:Toggle({
     Title = "Better Roads",
     Desc = "Newest Version of Better Roads V3",
     Default = false,
