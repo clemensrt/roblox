@@ -6,7 +6,7 @@ local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Player = game.Players.LocalPlayer
 
-Tabs.Custom:Section({
+Tabs.VehicleMods:Section({
     Title = "Suspension Mods",
     TextSize = 16,
 })
@@ -94,7 +94,7 @@ end
 -------------------------------------------------
 -- UI Controls
 -------------------------------------------------
-Tabs.Custom:Toggle({
+Tabs.VehicleMods:Toggle({
 	Title = "Air Suspension [Airbags]",
 	Desc = "(Keybind: F)",
 	Value = false,
@@ -103,7 +103,7 @@ Tabs.Custom:Toggle({
 	end,
 })
 
-Tabs.Custom:Slider({
+Tabs.VehicleMods:Slider({
 	Title = "Front Suspension",
 	Desc = "Adjust front height",
 	Value = { Min = 0, Max = 30, Default = 2 },
@@ -113,7 +113,7 @@ Tabs.Custom:Slider({
 	Precise = true,
 })
 
-Tabs.Custom:Slider({
+Tabs.VehicleMods:Slider({
 	Title = "Rear Suspension",
 	Desc = "Adjust rear height",
 	Value = { Min = 0, Max = 30, Default = 2 },
@@ -171,3 +171,4 @@ RunService.Heartbeat:Connect(function(dt)
 
 	applySuspension(car, sus.CurrentFront, sus.CurrentRear)
 end)
+
