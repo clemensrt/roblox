@@ -1,0 +1,380 @@
+--========================================================--
+-- 100% RELIABLE MODE PICKER (fixed & ready)
+--========================================================--
+
+local StarterGui = game:GetService("StarterGui")
+local Bindable = Instance.new("BindableFunction")
+	repeat task.wait() until _G.WindUI
+	local WindUI = _G.WindUI
+
+	local rs = game:GetService("ReplicatedStorage")
+	local privateServers = rs:FindFirstChild("PrivateServers")
+
+	-- Notify if not private server but DO NOT return early (so Normal still runs)
+	if not privateServers or not privateServers:FindFirstChild("Info") then
+		WindUI:Notify({
+			Title = "Asset Stealer V2",
+			Content = "⚠️ You are not in a Private Server",
+			Duration = 3,
+		})
+        return
+	end
+    
+_G.RunMode = nil
+
+Bindable.OnInvoke = function(choice)
+	if choice == "Normal" then
+		_G.RunMode = "Normal"
+	elseif choice == "All Vehicles" or choice == "All" then
+		_G.RunMode = "All"
+	end
+end
+
+-- Keep trying until SetCore actually binds (important for ERLC)
+local success = false
+repeat
+	success = pcall(function()
+		StarterGui:SetCore("SendNotification", {
+			Title = "Asset Stealer V2",
+			Text = "Choose mode:",
+			Duration = math.huge,
+			Callback = Bindable,
+			Button1 = "Normal",
+			Button2 = "All Vehicles",
+		})
+	end)
+	task.wait(0.5)
+until success
+
+-- Wait until user clicks a button
+repeat task.wait() until _G.RunMode ~= nil
+
+
+--========================================================--
+--  ALL VEHICLES SCRIPT (WindUI Notifications)
+--========================================================--
+
+local function RunAllVehicles()
+	repeat task.wait() until _G.WindUI
+	local WindUI = _G.WindUI
+
+	local garbage = getgc and getgc(true) or {}
+	local player = game:GetService("Players").LocalPlayer
+
+	-- TEAM CHECK
+	if player.Team == game.Teams.Civilian then
+		WindUI:Notify({
+			Title = "Asset Stealer V2",
+			Content = "Join a team and spawn a vehicle first!",
+			Duration = 4
+		})
+		return
+	end
+
+	-- VEHICLE CHECK
+	local vehicles = workspace:FindFirstChild("Vehicles")
+	local found = false
+
+	if vehicles then
+		for _, vehicle in ipairs(vehicles:GetChildren()) do
+			if vehicle:FindFirstChild("Control_Values")
+			and vehicle.Control_Values:FindFirstChild("Owner")
+			and vehicle.Control_Values.Owner.Value == player.Name then
+				found = true
+				break
+			end
+		end
+	end
+
+	if not found then
+		WindUI:Notify({
+			Title = "Asset Stealer V2",
+			Content = "You must spawn a vehicle!",
+			Duration = 4
+		})
+		return
+	end
+
+	local function getColor(color)
+		-- color expected like "r, g, b" or numbers; make safe
+		if not color then return "N/A" end
+		local parts = {}
+		if type(color) == "string" then
+			for p in string.gmatch(color, "[^, ]+") do
+				table.insert(parts, tonumber(p) or 0)
+			end
+		elseif typeof(color) == "Color3" then
+			return color:ToHex()
+		elseif type(color) == "table" then
+			for i = 1, 3 do
+				table.insert(parts, tonumber(color[i]) or 0)
+			end
+		end
+		local r = tonumber(parts[1]) or 0
+		local g = tonumber(parts[2]) or 0
+		local b = tonumber(parts[3]) or 0
+		local c = Color3.new(r, g, b)
+		if c and c.ToHex then
+			return c:ToHex()
+		end
+		-- fallback format
+		return string.format("(%s, %s, %s)", r, g, b)
+	end
+
+	local liveries = ""
+
+	for _, item in ipairs(garbage) do
+		if type(item) == "table" and rawget(item, "textureIds") then
+
+			local livery = "\n"
+			livery = livery .. string.format("%-20s %s\n", "Name:", tostring(item.liveryName))
+			livery = livery .. string.format("%-20s %s\n", "Vehicle Color:", tostring(getColor(item.vehicleColor)))
+			livery = livery .. string.format("%-20s %s\n", "Livery Color:", tostring(getColor(item.liveryColor)))
+			livery = livery .. string.format("%-20s %s\n", "Livery Transparency:", tostring(item.liveryTransparency))
+			livery = livery .. string.format("%-20s %s\n", "Approved by PRC:", tostring(item.isApproved))
+            livery = livery .. "--------------------\n"
+			livery = livery .. "Texture IDs:\n"
+			for side, id in pairs(item.textureIds) do
+				livery = livery .. string.format("    %-8s %s\n", tostring(side) .. ":", tostring(id))
+                
+			end
+
+			liveries = liveries .. livery
+		end
+	end
+
+	if liveries == "" then
+		WindUI:Notify({
+			Title = "Asset Stealer V2",
+			Content = "No vehicle liveries found in getgc().",
+			Duration = 4
+		})
+	else
+		pcall(setclipboard, liveries)
+		WindUI:Notify({
+			Title = "Asset Stealer V2",
+			Content = "Copied all vehicle liveries to clipboard!",
+			Duration = 4
+		})
+	end
+end
+
+
+
+--========================================================--
+--  NORMAL VEHICLE + UNIFORM SCRIPT (fixed)
+--========================================================--
+
+local function RunNormal()
+	repeat task.wait() until _G.WindUI
+	local WindUI = _G.WindUI
+
+	local rs = game:GetService("ReplicatedStorage")
+	local privateServers = rs:FindFirstChild("PrivateServers")
+
+	-- Notify if not private server but DO NOT return early (so Normal still runs)
+	if not privateServers or not privateServers:FindFirstChild("Info") then
+		WindUI:Notify({
+			Title = "Asset Stealer V2",
+			Content = "⚠️ You are not in a Private Server",
+			Duration = 3,
+		})
+        return
+	end
+
+	local function program()
+		local results = {}
+		local seen = {}
+
+		local function contains(tbl, val)
+			for _, v in ipairs(tbl) do
+				if v == val then return true end
+			end
+			return false
+		end
+
+		local function cleanId(id)
+			if not id or type(id) ~= "string" then
+				return tostring(id or "N/A")
+			end
+			return id:gsub('^rbxassetid://', ''):gsub('^rbxasset://', '')
+		end
+
+		local function extractAssetId(texture)
+			if type(texture) ~= "string" then return nil end
+			local id = texture:match('rbxassetid://(%d+)')
+			if id then return id end
+			return texture:match("%d+") or texture
+		end
+
+		local function addUnique(name, id, category)
+			if not id then return end
+			id = cleanId(id)
+			local key = name .. "|" .. id
+			if not seen[key] then
+				seen[key] = true
+				table.insert(results, category .. ": " .. name .. " → " .. id)
+			end
+		end
+
+		local function formatLiveryName(objName)
+			local pos = objName:match('^CustomLivery_(.+)')
+			if pos then
+				pos = pos:gsub("%d+$", "")
+				return pos
+			end
+			return objName
+		end
+
+		local function getVehicleName(vehicle)
+			local success, result = pcall(function()
+				return vehicle.CustomizationOptions.Texture.Value
+			end)
+			return success and result or "Unknown"
+		end
+
+		local function processLivery(vehicle)
+			if not vehicle then return end
+			if vehicle.Name == "Sheriff_Supervisor" then return end
+
+			local success, parts = pcall(function()
+				if vehicle:FindFirstChild("Body") and vehicle.Body:FindFirstChild("COLOR") then
+					return vehicle.Body.COLOR:GetChildren()
+				end
+				return {}
+			end)
+			if not success then return end
+
+			local vehicleName = getVehicleName(vehicle)
+
+			for _, val in ipairs(parts or {}) do
+				if (val:IsA("Texture") or val:IsA("Decal"))
+				and not contains({ "Dirt", "Snow", "Weld" }, val.Name) then
+
+					local assetId = extractAssetId(tostring(val.Texture))
+					if assetId then
+						local pos = formatLiveryName(val.Name)
+						addUnique(vehicleName .. " (" .. vehicle.Name .. " - " .. pos .. ")", assetId, "Livery")
+					end
+				end
+			end
+		end
+
+		-- FIXED recursive uniform scanner
+		local function scanUniformFolder(folder)
+			if not folder then return end
+
+			local custom = folder:FindFirstChild("CustomUniform")
+			if custom then
+				local pants = folder:FindFirstChild("Pants")
+				local shirt = folder:FindFirstChild("Shirt")
+
+				if pants and pants:IsA("Pants") then
+					addUnique(folder.Name .. " (Pants)", pants.PantsTemplate, "Uniform")
+				end
+
+				if shirt and shirt:IsA("Shirt") then
+					addUnique(folder.Name .. " (Shirt)", shirt.ShirtTemplate, "Uniform")
+				end
+			end
+
+			for _, child in ipairs(folder:GetChildren()) do
+				if child:IsA("Folder") then
+					-- RECURSIVE CALL (fixed)
+					scanUniformFolder(child)
+				end
+			end
+		end
+
+		local function scanCustomTeams()
+			local priv = rs:FindFirstChild("PrivateServers")
+			if not priv then return end
+
+			local teams = priv:FindFirstChild("CustomTeams")
+			if not teams then return end
+
+			local names = { "DOT", "Fire", "Police", "Sheriff" }
+			for _, teamName in ipairs(names) do
+				local f = teams:FindFirstChild(teamName)
+				if not f then
+					addUnique(teamName, "Missing Folder", "Team Logo")
+				else
+					local logo = f:FindFirstChild("Logo")
+					local out = nil
+
+					if logo then
+						if logo:IsA("StringValue") then
+							out = logo.Value
+						elseif logo:IsA("Decal") or logo:IsA("Texture") then
+							out = extractAssetId(logo.Texture) or logo.Texture
+						else
+							pcall(function()
+								if logo.Value then out = tostring(logo.Value) end
+							end)
+							if not out then
+								pcall(function()
+									if logo.Texture then out = extractAssetId(tostring(logo.Texture)) end
+								end)
+							end
+						end
+					end
+
+					addUnique(teamName, out or "N/A", "Team Logo")
+				end
+			end
+		end
+
+		-- VEHICLES
+		local VF = workspace:FindFirstChild("Vehicles")
+		if VF then
+			for _, vehicle in ipairs(VF:GetChildren()) do
+				pcall(processLivery, vehicle)
+			end
+		end
+
+		-- UNIFORMS
+		local uniformsRoot = rs:FindFirstChild("ReplicatedState")
+		if uniformsRoot then
+			uniformsRoot = uniformsRoot:FindFirstChild("Uniforms")
+			if uniformsRoot then
+				scanUniformFolder(uniformsRoot)
+			end
+		end
+
+		-- TEAMS
+		scanCustomTeams()
+
+		local out = (#results > 0 and table.concat(results, "\n") or "N/A")
+
+		if out == "N/A" then
+			WindUI:Notify({
+				Title = "Asset Stealer V2",
+				Content = "No assets found.",
+				Duration = 3,
+			})
+		else
+			pcall(setclipboard, out)
+			WindUI:Notify({
+				Title = "Asset Stealer V2",
+				Content = "Copied Vehicle + Uniform Assets!",
+				Duration = 3,
+			})
+		end
+
+		return out
+	end
+
+	pcall(program)
+end
+
+
+
+--========================================================--
+--  RUN MODE PICKED BY USER
+--========================================================--
+
+if _G.RunMode == "All" then
+	RunAllVehicles()
+else
+	RunNormal()
+end
