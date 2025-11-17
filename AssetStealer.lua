@@ -5,7 +5,7 @@ local Functions = _G.Functions
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-local GITHUB_RAW = "https://coreapi.online/asset-stealer.lua"
+local GITHUB_RAW = "https://pastebin.com/raw/Ugf6Kn0Y"
 
 local MainTab = Tabs.Main
 
